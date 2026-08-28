@@ -394,7 +394,8 @@ function ProfileScreen({ onSelect }: { onSelect: (p: PatientProfile) => void }) 
 
 // ─── Dashboard Tab ────────────────────────────────────────────────────────────
 
-function DashboardTab({ patient, setTab }: { patient: PatientProfile; setTab: (t: Tab) => void }) {
+// `patient` is unused: the mock lists below aren't scoped per-patient yet.
+function DashboardTab({ patient: _patient, setTab }: { patient: PatientProfile; setTab: (t: Tab) => void }) {
   const activeRx = PRESCRIPTIONS.filter((p) => p.status === "active").length;
   const abnormalLabs = LAB_REPORTS.filter((l) => l.status !== "normal").length;
   const severeAlgys = ALLERGIES.filter((a) => a.severity === "severe").length;
