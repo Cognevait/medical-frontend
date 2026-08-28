@@ -1,16 +1,27 @@
 import { useState } from "react";
 import { HeartPulse, Shield, FileText, Share2, Bell, Mail, Lock, Eye, EyeOff, ArrowRight } from "lucide-react";
+import { useAuthStore } from "../../../stores/authStore";
 
 export function LoginScreen({ onLogin }: { onLogin: () => void }) {
+  const login = useAuthStore((s) => s.login);
   const [showPassword, setShowPassword] = useState(false);
   const [loading, setLoading] = useState(false);
+  const [formError, setFormError] = useState<string | null>(null);
   const [email, setEmail] = useState("amara.nwosu@email.com");
   const [password, setPassword] = useState("password123");
 
-  function handleSubmit(e: React.FormEvent) {
+  async function handleSubmit(e: React.FormEvent) {
     e.preventDefault();
     setLoading(true);
-    setTimeout(onLogin, 1100);
+    setFormError(null);
+    try {
+      await login(email, password);
+      onLogin();
+    } catch {
+      setFormError("Invalid email or password.");
+    } finally {
+      setLoading(false);
+    }
   }
 
   return (
@@ -92,6 +103,11 @@ export function LoginScreen({ onLogin }: { onLogin: () => void }) {
               </label>
               <button type="button" className="text-xs text-primary font-medium hover:underline">Forgot password?</button>
             </div>
+            {formError && (
+              <div className="px-3 py-2 rounded-lg bg-red-50 border border-red-200 text-xs text-red-600">
+                {formError}
+              </div>
+            )}
             <button type="submit" disabled={loading}
               className="w-full py-2.5 rounded-lg bg-primary text-primary-foreground text-sm font-semibold hover:opacity-90 transition-all flex items-center justify-center gap-2 disabled:opacity-70"
               style={{ fontFamily: "'DM Sans', sans-serif" }}>
@@ -103,7 +119,7 @@ export function LoginScreen({ onLogin }: { onLogin: () => void }) {
             </button>
           </form>
           <div className="mt-5 p-3 rounded-lg bg-muted border border-border text-xs text-muted-foreground">
-            <span className="font-medium text-foreground">Demo:</span> Use any password with the pre-filled email.
+            <span className="font-medium text-foreground">Demo:</span> Sign in with the pre-filled email and password.
           </div>
         </div>
       </div>
