@@ -26,7 +26,8 @@ import { LabsTab } from "../features/labs/LabsTab";
 import { VisitsTab } from "../features/visits/VisitsTab";
 import { AllergiesTab } from "../features/allergies/AllergiesTab";
 import { AddRecordModal } from "../features/records/AddRecordModal";
-import { ALLERGIES, LAB_REPORTS } from "../../mocks/data";
+import { useApiResource } from "../../hooks/useApiResource";
+import { listAllergies, listLabReports, listPrescriptions, listVisits } from "../../services/recordsService";
 import type { PatientProfile, Tab } from "../../types/patient";
 
 const NAV: { id: Tab; label: string; icon: (active: boolean) => React.ReactNode }[] = [
@@ -43,6 +44,16 @@ export function AppShell({ patient, onLogout }: { patient: PatientProfile; onLog
   const [search, setSearch] = useState("");
   const [sidebarOpen, setSidebarOpen] = useState(false);
   const [showProfile, setShowProfile] = useState(false);
+  const [dataVersion, setDataVersion] = useState(0);
+
+  const prescriptions = useApiResource(() => listPrescriptions(patient.id), [patient.id, dataVersion]);
+  const labs = useApiResource(() => listLabReports(patient.id), [patient.id, dataVersion]);
+  const visits = useApiResource(() => listVisits(patient.id), [patient.id, dataVersion]);
+  const allergies = useApiResource(() => listAllergies(patient.id), [patient.id, dataVersion]);
+
+  function handleRecordSaved() {
+    setDataVersion((v) => v + 1);
+  }
 
   return (
     <div className="size-full min-h-screen bg-background flex" style={{ fontFamily: "'Inter', sans-serif" }}>
@@ -113,14 +124,14 @@ export function AppShell({ patient, onLogout }: { patient: PatientProfile; onLog
               }`} style={{ fontFamily: "'DM Sans', sans-serif" }}>
               {item.icon(tab === item.id)}
               {item.label}
-              {item.id === "allergies" && ALLERGIES.filter((a) => a.flagged).length > 0 && (
+              {item.id === "allergies" && (allergies.data ?? []).filter((a) => a.flagged).length > 0 && (
                 <span className="ml-auto text-xs bg-red-100 text-red-600 font-semibold px-1.5 py-0.5 rounded-full" style={{ fontFamily: "'DM Mono', monospace" }}>
-                  {ALLERGIES.filter((a) => a.flagged).length}
+                  {(allergies.data ?? []).filter((a) => a.flagged).length}
                 </span>
               )}
-              {item.id === "labs" && LAB_REPORTS.filter((l) => l.status !== "normal").length > 0 && (
+              {item.id === "labs" && (labs.data ?? []).filter((l) => l.status !== "normal").length > 0 && (
                 <span className="ml-auto text-xs bg-amber-100 text-amber-700 font-semibold px-1.5 py-0.5 rounded-full" style={{ fontFamily: "'DM Mono', monospace" }}>
-                  {LAB_REPORTS.filter((l) => l.status !== "normal").length}
+                  {(labs.data ?? []).filter((l) => l.status !== "normal").length}
                 </span>
               )}
             </button>
@@ -185,15 +196,54 @@ export function AppShell({ patient, onLogout }: { patient: PatientProfile; onLog
         </div>
 
         <main className="flex-1 px-4 lg:px-6 py-5 overflow-y-auto">
-          {tab === "dashboard" && <DashboardTab patient={patient} setTab={setTab} />}
-          {tab === "prescriptions" && <PrescriptionsTab onAdd={() => setShowModal(true)} />}
-          {tab === "labs" && <LabsTab onAdd={() => setShowModal(true)} />}
-          {tab === "visits" && <VisitsTab onAdd={() => setShowModal(true)} />}
-          {tab === "allergies" && <AllergiesTab onAdd={() => setShowModal(true)} />}
+          {tab === "dashboard" && (
+            <DashboardTab
+              patient={patient}
+              setTab={setTab}
+              prescriptions={prescriptions.data ?? []}
+              labs={labs.data ?? []}
+              visits={visits.data ?? []}
+              allergies={allergies.data ?? []}
+            />
+          )}
+          {tab === "prescriptions" && (
+            <PrescriptionsTab
+              onAdd={() => setShowModal(true)}
+              prescriptions={prescriptions.data ?? []}
+              loading={prescriptions.loading}
+              error={prescriptions.error}
+            />
+          )}
+          {tab === "labs" && (
+            <LabsTab onAdd={() => setShowModal(true)} labs={labs.data ?? []} loading={labs.loading} error={labs.error} />
+          )}
+          {tab === "visits" && (
+            <VisitsTab
+              onAdd={() => setShowModal(true)}
+              visits={visits.data ?? []}
+              loading={visits.loading}
+              error={visits.error}
+            />
+          )}
+          {tab === "allergies" && (
+            <AllergiesTab
+              onAdd={() => setShowModal(true)}
+              allergies={allergies.data ?? []}
+              loading={allergies.loading}
+              error={allergies.error}
+            />
+          )}
         </main>
       </div>
 
-      {showModal && <AddRecordModal onClose={() => setShowModal(false)} defaultType={tab} />}
+      {showModal && (
+        <AddRecordModal
+          onClose={() => setShowModal(false)}
+          onSaved={handleRecordSaved}
+          defaultType={tab}
+          patientId={patient.id}
+        />
+      )}
     </div>
   );
 }

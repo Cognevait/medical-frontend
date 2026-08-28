@@ -13,14 +13,28 @@ import {
 } from "lucide-react";
 import { StatusBadge } from "../../ui/StatusBadge";
 import { formatDate, statusPill } from "../../../utils/format";
-import { PRESCRIPTIONS, LAB_REPORTS, VISITS, ALLERGIES, REMINDERS } from "../../../mocks/data";
-import type { PatientProfile, Tab } from "../../../types/patient";
+// Medication-adherence reminders have no backend equivalent yet — no
+// endpoint tracks doses taken — so this list alone stays mock data.
+import { REMINDERS } from "../../../mocks/data";
+import type { Allergy, LabReport, PatientProfile, Prescription, Tab, Visit } from "../../../types/patient";
 
-// `patient` is unused: the mock lists below aren't scoped per-patient yet — see mocks/data.ts.
-export function DashboardTab({ patient: _patient, setTab }: { patient: PatientProfile; setTab: (t: Tab) => void }) {
-  const activeRx = PRESCRIPTIONS.filter((p) => p.status === "active").length;
-  const abnormalLabs = LAB_REPORTS.filter((l) => l.status !== "normal").length;
-  const severeAlgys = ALLERGIES.filter((a) => a.severity === "severe").length;
+export function DashboardTab({
+  prescriptions,
+  labs,
+  visits,
+  allergies,
+  setTab,
+}: {
+  patient: PatientProfile;
+  setTab: (t: Tab) => void;
+  prescriptions: Prescription[];
+  labs: LabReport[];
+  visits: Visit[];
+  allergies: Allergy[];
+}) {
+  const activeRx = prescriptions.filter((p) => p.status === "active").length;
+  const abnormalLabs = labs.filter((l) => l.status !== "normal").length;
+  const severeAlgys = allergies.filter((a) => a.severity === "severe").length;
   const takenToday = REMINDERS.filter((r) => r.taken).length;
 
   return (
@@ -28,9 +42,9 @@ export function DashboardTab({ patient: _patient, setTab }: { patient: PatientPr
       <div className="grid grid-cols-2 xl:grid-cols-4 gap-3">
         {[
           { label: "Active Medications", value: activeRx, sub: "prescriptions", icon: <PillIcon size={16} />, bg: "bg-secondary", color: "text-primary", tab: "prescriptions" as Tab },
-          { label: "Lab Reports", value: LAB_REPORTS.length, sub: `${abnormalLabs} need review`, icon: <FlaskConical size={16} />, bg: "bg-sky-50", color: "text-sky-600", tab: "labs" as Tab },
-          { label: "Clinic Visits", value: VISITS.length, sub: "recorded", icon: <CalendarDays size={16} />, bg: "bg-violet-50", color: "text-violet-600", tab: "visits" as Tab },
-          { label: "Known Allergies", value: ALLERGIES.length, sub: `${severeAlgys} flagged severe`, icon: <AlertTriangle size={16} />, bg: "bg-rose-50", color: "text-rose-600", tab: "allergies" as Tab },
+          { label: "Lab Reports", value: labs.length, sub: `${abnormalLabs} need review`, icon: <FlaskConical size={16} />, bg: "bg-sky-50", color: "text-sky-600", tab: "labs" as Tab },
+          { label: "Clinic Visits", value: visits.length, sub: "recorded", icon: <CalendarDays size={16} />, bg: "bg-violet-50", color: "text-violet-600", tab: "visits" as Tab },
+          { label: "Known Allergies", value: allergies.length, sub: `${severeAlgys} flagged severe`, icon: <AlertTriangle size={16} />, bg: "bg-rose-50", color: "text-rose-600", tab: "allergies" as Tab },
         ].map((s) => (
           <button key={s.label} onClick={() => setTab(s.tab)}
             className="bg-card border border-border rounded-xl p-4 text-left hover:shadow-sm hover:border-primary/20 transition-all">
@@ -49,7 +63,7 @@ export function DashboardTab({ patient: _patient, setTab }: { patient: PatientPr
             <span className="text-xs font-semibold text-amber-700 uppercase tracking-wider" style={{ fontFamily: "'DM Mono', monospace" }}>Attention Required</span>
           </div>
           <div className="divide-y divide-border">
-            {ALLERGIES.filter((a) => a.flagged).map((a) => (
+            {allergies.filter((a) => a.flagged).map((a) => (
               <div key={a.id} className="px-4 py-3 flex items-center gap-3">
                 <ShieldAlert size={13} className="text-red-500 flex-shrink-0" />
                 <span className="text-sm text-foreground flex-1">
@@ -60,7 +74,7 @@ export function DashboardTab({ patient: _patient, setTab }: { patient: PatientPr
                 </button>
               </div>
             ))}
-            {LAB_REPORTS.filter((l) => l.status === "critical").map((l) => (
+            {labs.filter((l) => l.status === "critical").map((l) => (
               <div key={l.id} className="px-4 py-3 flex items-center gap-3">
                 <Activity size={13} className="text-red-500 flex-shrink-0" />
                 <span className="text-sm text-foreground flex-1">
@@ -87,7 +101,7 @@ export function DashboardTab({ patient: _patient, setTab }: { patient: PatientPr
             </button>
           </div>
           <div className="divide-y divide-border">
-            {PRESCRIPTIONS.filter((p) => p.status === "active").map((rx) => (
+            {prescriptions.filter((p) => p.status === "active").map((rx) => (
               <div key={rx.id} className="px-4 py-3 flex items-start gap-3 hover:bg-muted/30 transition-colors">
                 <div className="w-8 h-8 rounded-full bg-secondary flex items-center justify-center flex-shrink-0 mt-0.5">
                   <PillIcon size={13} className="text-primary" />
@@ -155,7 +169,7 @@ export function DashboardTab({ patient: _patient, setTab }: { patient: PatientPr
           </button>
         </div>
         <div className="divide-y divide-border">
-          {VISITS.slice(0, 3).map((v) => (
+          {visits.slice(0, 3).map((v) => (
             <div key={v.id} className="px-4 py-3 flex items-start gap-4 hover:bg-muted/30 transition-colors">
               <div className="text-xs text-muted-foreground mt-0.5 w-20 flex-shrink-0" style={{ fontFamily: "'DM Mono', monospace" }}>
                 {formatDate(v.date)}
