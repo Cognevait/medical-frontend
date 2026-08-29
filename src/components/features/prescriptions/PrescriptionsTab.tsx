@@ -3,15 +3,25 @@ import { Pill as PillIcon, Download, Share2, FileText } from "lucide-react";
 import { TabHeader } from "../../ui/TabHeader";
 import { StatusBadge } from "../../ui/StatusBadge";
 import { formatDate, statusPill } from "../../../utils/format";
-import { PRESCRIPTIONS } from "../../../mocks/data";
+import type { Prescription } from "../../../types/patient";
 
-export function PrescriptionsTab({ onAdd }: { onAdd: () => void }) {
+export function PrescriptionsTab({
+  onAdd,
+  prescriptions,
+  loading,
+  error,
+}: {
+  onAdd: () => void;
+  prescriptions: Prescription[];
+  loading: boolean;
+  error: string | null;
+}) {
   const [filter, setFilter] = useState<"all" | "active" | "completed" | "discontinued">("all");
-  const filtered = filter === "all" ? PRESCRIPTIONS : PRESCRIPTIONS.filter((p) => p.status === filter);
+  const filtered = filter === "all" ? prescriptions : prescriptions.filter((p) => p.status === filter);
 
   return (
     <div>
-      <TabHeader title="Prescriptions" count={PRESCRIPTIONS.length} onAdd={onAdd} />
+      <TabHeader title="Prescriptions" count={prescriptions.length} onAdd={onAdd} />
       <div className="flex gap-2 mb-5 flex-wrap">
         {(["all", "active", "completed", "discontinued"] as const).map((f) => (
           <button key={f} onClick={() => setFilter(f)}
@@ -20,11 +30,13 @@ export function PrescriptionsTab({ onAdd }: { onAdd: () => void }) {
             }`} style={{ fontFamily: "'DM Sans', sans-serif" }}>
             {f.charAt(0).toUpperCase() + f.slice(1)}
             <span className="ml-1.5 opacity-60" style={{ fontFamily: "'DM Mono', monospace" }}>
-              {f === "all" ? PRESCRIPTIONS.length : PRESCRIPTIONS.filter((p) => p.status === f).length}
+              {f === "all" ? prescriptions.length : prescriptions.filter((p) => p.status === f).length}
             </span>
           </button>
         ))}
       </div>
+      {loading && <p className="text-sm text-muted-foreground">Loading prescriptions…</p>}
+      {error && <p className="text-sm text-red-600">{error}</p>}
       <div className="space-y-3">
         {filtered.map((rx) => (
           <div key={rx.id} className="bg-card border border-border rounded-xl p-5 hover:shadow-sm transition-shadow">

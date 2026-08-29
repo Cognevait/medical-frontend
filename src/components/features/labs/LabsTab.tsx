@@ -3,15 +3,25 @@ import { TabHeader } from "../../ui/TabHeader";
 import { StatusBadge } from "../../ui/StatusBadge";
 import { TrendIcon } from "../../ui/TrendIcon";
 import { formatDate, statusPill } from "../../../utils/format";
-import { LAB_REPORTS } from "../../../mocks/data";
+import type { LabReport } from "../../../types/patient";
 
-export function LabsTab({ onAdd }: { onAdd: () => void }) {
+export function LabsTab({
+  onAdd,
+  labs,
+  loading,
+  error,
+}: {
+  onAdd: () => void;
+  labs: LabReport[];
+  loading: boolean;
+  error: string | null;
+}) {
   const [filter, setFilter] = useState<"all" | "normal" | "abnormal" | "critical">("all");
-  const filtered = filter === "all" ? LAB_REPORTS : LAB_REPORTS.filter((l) => l.status === filter);
+  const filtered = filter === "all" ? labs : labs.filter((l) => l.status === filter);
 
   return (
     <div>
-      <TabHeader title="Lab Reports" count={LAB_REPORTS.length} onAdd={onAdd} />
+      <TabHeader title="Lab Reports" count={labs.length} onAdd={onAdd} />
       <div className="flex gap-2 mb-5 flex-wrap">
         {(["all", "normal", "abnormal", "critical"] as const).map((f) => (
           <button key={f} onClick={() => setFilter(f)}
@@ -22,6 +32,8 @@ export function LabsTab({ onAdd }: { onAdd: () => void }) {
           </button>
         ))}
       </div>
+      {loading && <p className="text-sm text-muted-foreground mb-3">Loading lab reports…</p>}
+      {error && <p className="text-sm text-red-600 mb-3">{error}</p>}
       <div className="bg-card border border-border rounded-xl overflow-hidden">
         <div className="hidden sm:grid grid-cols-12 gap-2 px-5 py-3 border-b border-border bg-muted/60">
           {[

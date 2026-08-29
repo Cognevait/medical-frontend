@@ -2,16 +2,28 @@ import { useState } from "react";
 import { Stethoscope, ChevronDown, Download, Share2 } from "lucide-react";
 import { TabHeader } from "../../ui/TabHeader";
 import { formatDate } from "../../../utils/format";
-import { VISITS } from "../../../mocks/data";
+import type { Visit } from "../../../types/patient";
 
-export function VisitsTab({ onAdd }: { onAdd: () => void }) {
-  const [expanded, setExpanded] = useState<string | null>("vis-001");
+export function VisitsTab({
+  onAdd,
+  visits,
+  loading,
+  error,
+}: {
+  onAdd: () => void;
+  visits: Visit[];
+  loading: boolean;
+  error: string | null;
+}) {
+  const [expanded, setExpanded] = useState<string | null>(null);
 
   return (
     <div>
-      <TabHeader title="Visit History" count={VISITS.length} onAdd={onAdd} />
+      <TabHeader title="Visit History" count={visits.length} onAdd={onAdd} />
+      {loading && <p className="text-sm text-muted-foreground mb-3">Loading visits…</p>}
+      {error && <p className="text-sm text-red-600 mb-3">{error}</p>}
       <div className="space-y-3">
-        {VISITS.map((v) => (
+        {visits.map((v) => (
           <div key={v.id} className={`bg-card border rounded-xl overflow-hidden transition-all ${expanded === v.id ? "border-primary/30 shadow-sm" : "border-border"}`}>
             <button onClick={() => setExpanded(expanded === v.id ? null : v.id)}
               className="w-full px-5 py-4 text-left flex items-start gap-3 hover:bg-muted/20 transition-colors">

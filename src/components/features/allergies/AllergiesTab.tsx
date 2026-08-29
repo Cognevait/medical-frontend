@@ -2,14 +2,26 @@ import { Syringe, ShieldAlert, Share2 } from "lucide-react";
 import { TabHeader } from "../../ui/TabHeader";
 import { StatusBadge } from "../../ui/StatusBadge";
 import { formatDate, statusPill } from "../../../utils/format";
-import { ALLERGIES } from "../../../mocks/data";
+import type { Allergy } from "../../../types/patient";
 
-export function AllergiesTab({ onAdd }: { onAdd: () => void }) {
+export function AllergiesTab({
+  onAdd,
+  allergies,
+  loading,
+  error,
+}: {
+  onAdd: () => void;
+  allergies: Allergy[];
+  loading: boolean;
+  error: string | null;
+}) {
   return (
     <div>
-      <TabHeader title="Allergies & Adverse Reactions" count={ALLERGIES.length} onAdd={onAdd} />
+      <TabHeader title="Allergies & Adverse Reactions" count={allergies.length} onAdd={onAdd} />
+      {loading && <p className="text-sm text-muted-foreground mb-3">Loading allergies…</p>}
+      {error && <p className="text-sm text-red-600 mb-3">{error}</p>}
       <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
-        {ALLERGIES.map((a) => (
+        {allergies.map((a) => (
           <div key={a.id} className={`bg-card border rounded-xl p-5 ${a.severity === "severe" ? "border-red-200" : "border-border"}`}>
             <div className="flex items-start justify-between gap-2 mb-4">
               <div className="flex items-center gap-2.5">
